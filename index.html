@@ -948,10 +948,13 @@ function hqDude(X,L,P){
   if(atl){X.drawImage(im,f*cw,0,cw,ch,-dw/2,-H+2,dw,H);if(f2>=0&&bl>0.03){const ga=X.globalAlpha;X.globalAlpha=ga*bl;X.drawImage(im,f2*cw,0,cw,ch,-dw/2,-H+2,dw,H);X.globalAlpha=ga;}}
   else{const k=H/ch,hip=Math.floor(ch*0.52),ov=Math.floor(ch*0.05),walk=mv>0.08&&!P.fall&&!P.rot&&!(P.reach>0.3||P.hug);
     if(walk){const wv=Math.min(1,mv*1.4);
-      for(const s of[-1,1]){const a=Math.sin(ph+(s>0?Math.PI:0)),lift=Math.max(0,a)*6*wv,sw=a*0.16*wv,px=s*dw*0.17;
-        X.save();X.translate(px,-H+2+hip*k);X.rotate(sw);X.translate(0,-lift);
-        X.drawImage(im,s<0?0:cw/2,hip-ov,cw/2,ch-hip+ov,(s<0?-dw/2:0)-px,-ov*k,dw/2,(ch-hip+ov)*k);X.restore();}
-      X.save();X.translate(0,-Math.abs(Math.sin(ph))*2.5*wv);X.translate(0,-H+2+hip*k);X.rotate(Math.sin(ph)*0.035*wv);X.translate(0,H-2-hip*k);
+      for(const s of[-1,1]){const ph2=ph+(s>0?Math.PI:0),a=Math.sin(ph2),lift=Math.max(0,Math.cos(ph2+0.4))*9*wv,sw=a*0.36*wv,px=s*dw*0.17,
+          bend=Math.max(0,Math.sin(ph2+1.7))*0.85*wv,kr=Math.floor(hip+(ch-hip)*0.46),sx=s<0?0:cw/2,dx=(s<0?-dw/2:0)-px;
+        X.save();X.translate(px+a*2.2*wv,-H+2+hip*k);X.rotate(sw);X.translate(0,-lift*0.55);
+        X.drawImage(im,sx,hip-ov,cw/2,kr-hip+ov,dx,-ov*k,dw/2,(kr-hip+ov)*k);
+        X.translate(0,(kr-hip)*k);X.rotate(bend);X.translate(0,-lift*0.45);
+        X.drawImage(im,sx,kr,cw/2,ch-kr,dx,0,dw/2,(ch-kr)*k);X.restore();}
+      X.save();X.translate(0,-Math.abs(Math.sin(ph))*3.6*wv);X.translate(0,-H+2+hip*k);X.rotate(Math.sin(ph)*0.06*wv);X.translate(0,H-2-hip*k);
       X.drawImage(im,0,0,cw,hip+ov,-dw/2,-H+2,dw,(hip+ov)*k);X.restore();}
     else{if(P.talk&&!P.fall)X.scale(1,1+0.018*Math.sin(t*22)*P.talk);X.drawImage(im,-dw/2,-H+2,dw,H);}}
   if(P.flash){X.globalCompositeOperation='lighter';X.globalAlpha*=0.7;if(atl)X.drawImage(im,f*cw,0,cw,ch,-dw/2,-H+2,dw,H);else X.drawImage(im,-dw/2,-H+2,dw,H);}
