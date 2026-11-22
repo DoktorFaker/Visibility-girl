@@ -2241,7 +2241,7 @@ class Enemy{
     if(this.vxS==null){this.vxS=this.vx;this.dirS=this.dir;}this.vxS+=(this.vx-this.vxS)*Math.min(1,dt*9);
     this.ph+=dt*Math.abs(this.vxS)*0.11/this.sc;
     this.mvS=(this.mvS||0)+(Math.min(1,Math.abs(this.vxS)/35)-(this.mvS||0))*Math.min(1,dt*7);
-    this.dirS+=(this.dir-this.dirS)*Math.min(1,dt*13);
+    this.dirS+=(this.dir-this.dirS)*Math.min(1,dt*7.5);
   }
   navigate(g,p){
     const cx=this.x+this.w/2,feet=this.y+this.h,pcx=p.x+p.w/2,dy=(p.y+p.h)-feet,W=g.world;
@@ -2296,8 +2296,16 @@ class Enemy{
      if(this.mvS>0.1&&!P.fall&&!P.rot&&P.lean<0.05)P.lean=0.045*this.mvS;
      let dd=this.dirS==null?this.dir:this.dirS;if(Math.abs(dd)<0.18)dd=0.18*(this.dir||1);
      dd*=1+0.05*Math.sin(this.ph*2)*(this.mvS||0);
-     if(this.onGround&&this.st!=='climb'&&!P.fall&&!P.rot){ctx.save();ctx.beginPath();ctx.rect(cx-60,fy,120,26);ctx.clip();ctx.globalAlpha=0.14;ctx.translate(0,2*fy+2);ctx.scale(1,-1);drawDude(ctx,this.look,P,cx,fy,dd,this.sc);ctx.restore();}
-     drawDude(ctx,this.look,P,cx,fy,dd,this.sc);}
+     const sgn=this.dir<0?-1:1,tp=Math.max(0,Math.min(1,((this.dirS==null?this.dir:this.dirS)*sgn+1)/2)),turning=tp<0.97;
+     const dr=()=>{
+       if(!turning){drawDude(ctx,this.look,P,cx,fy,dd,this.sc);return;}
+       const w=0.66+0.34*Math.abs(2*tp-1),ga=ctx.globalAlpha,s=Math.sin(Math.PI*tp);
+       ctx.save();ctx.translate(cx,fy);ctx.rotate(sgn*0.07*s);ctx.scale(1,1-0.035*s);ctx.translate(-cx,-fy);
+       ctx.globalAlpha=ga*(1-tp*tp);drawDude(ctx,this.look,P,cx,fy,-sgn*w,this.sc);
+       ctx.globalAlpha=ga*(0.15+0.85*tp);drawDude(ctx,this.look,P,cx,fy,sgn*w,this.sc);
+       ctx.restore();ctx.globalAlpha=ga;};
+     if(this.onGround&&this.st!=='climb'&&!P.fall&&!P.rot){ctx.save();ctx.beginPath();ctx.rect(cx-60,fy,120,26);ctx.clip();ctx.globalAlpha=0.14;ctx.translate(0,2*fy+2);ctx.scale(1,-1);dr();ctx.restore();}
+     dr();}
     if(this.type==='clone'){ctx.fillStyle='rgba(180,240,255,0.5)';for(let i=0;i<3;i++)ctx.fillRect(this.x+rnd(-6,6),this.y+Math.random()*this.h,this.w,1.5);}
     if(this.stun>0){ctx.fillStyle='#ffff66';for(let i=0;i<3;i++){const a=this.t*6+i*TAU/3;ctx.fillRect(cx+Math.cos(a)*11-1.5,this.y-4+Math.sin(a)*3-1.5,3,3);}}
     if(this.hp<this.maxHp&&this.hp>0&&this.maxHp>1){
