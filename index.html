@@ -4968,7 +4968,7 @@ class Game{
     this.world=new World(i);
     this.enemies=[];this.boss=null;this.projs=[];this.traps=[];this.beams=[];this.pick=[];this.vfx=[];this.corpses=[];this.pSay=null;this.lights.lights=[];
     this.kills=0;this.wave=null;this.secIdx=0;this.convo=null;this.roasC=0;this.roasT=-9;
-    this.sections=[];for(let x=0;x+BASE_W<=this.world.AX-40;x+=780)this.sections.push({x,size:Math.min(14,6+Math.floor(i/2)+this.sections.length)});
+    this.sections=[];for(let x=0;x+BASE_W<=this.world.AX-40;x+=780)this.sections.push({x,size:Math.min(18,Math.ceil((6+Math.floor(i/2)+this.sections.length)*1.22))});
     this.quota=this.sections.reduce((a,q)=>a+q.size,0);this.bossStarted=false;this.bossDone=false;this.locked=false;this.gateOpened=false;this.winT=0;
     this.rockets=[];Fire.clear();this.flash=0;
     if(this.player.ammo){this.player.ammo.rocket=Math.max(5,this.player.ammo.rocket);this.player.ammo.grenade=Math.max(5,this.player.ammo.grenade);}
@@ -5385,7 +5385,7 @@ class Game{
   updateWaves(dt){
     const p=this.player,S=this.sections;
     if(this.wave){
-      const w=this.wave,maxAlive=Math.min(7+Math.floor(this.li*0.6),12);
+      const w=this.wave,maxAlive=Math.min(9+Math.floor(this.li*0.6),14);
       w.spawnT-=dt;
       if(w.left>0&&w.spawnT<=0&&this.enemies.length<maxAlive){this.spawnWaveEnemy(w.sec);w.left--;w.spawnT=rnd(0.2,0.6);}
       if(w.left<=0&&this.enemies.length===0){
