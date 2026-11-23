@@ -4301,13 +4301,13 @@ function brkSprite(c,lab,fl){const k=c+'|'+lab+'|'+(fl?1:0);let o=_BRK.get(k);if
   const gl=x.createLinearGradient(0,0,0,h);gl.addColorStop(0,'rgba(255,255,255,0.55)');gl.addColorStop(0.45,'rgba(255,255,255,0.08)');gl.addColorStop(0.5,'rgba(0,0,0,0.05)');gl.addColorStop(1,'rgba(0,0,0,0.45)');x.fillStyle=gl;x.beginPath();x.roundRect(0,0,w,h,5);x.fill();x.fillStyle='rgba(255,255,255,0.35)';x.fillRect(4,2,w-8,2);
   x.fillStyle='#10061c';x.font='16px '+FONT;x.textAlign='center';x.textBaseline='middle';x.fillText(lab,w/2,h/2-1);_BRK.set(k,o);return o;}
 class Breakout extends VBase{
-  constructor(g,kind){super(g,kind);this.lives=5;this.pw=170;this.pvx=0;this.px=400;this.balls=[];this.stuck=true;this.vxp=0;this.bricks=[];this.caps=[];this.bolts=[];this.laserT=0;this.wideT=0;this.slowT=0;this.hits=0;this.cool=0;
+  constructor(g,kind){super(g,kind);this.lives=5;this.pw=215;this.pvx=0;this.px=400;this.balls=[];this.stuck=true;this.vxp=0;this.bricks=[];this.caps=[];this.bolts=[];this.laserT=0;this.wideT=0;this.slowT=0;this.hits=0;this.cool=0;
     const R=vMul(77);for(let r=0;r<6;r++)for(let c=0;c<12;c++){if(r===3&&(c===0||c===11))continue;this.bricks.push({x:40+c*60,y:100+r*26,w:58,h:23,r,hp:1,lab:BRK_LAB[Math.floor(R()*BRK_LAB.length)],flash:0});}
     this.total=this.bricks.length;this.ok=0;this.spawnBall();this.mouseX=null;
-    this._mv=e=>{const c=canvas.getBoundingClientRect(),k=TW/c.width;this.mouseX=(e.clientX-c.left)*k-GX;this.mouseT=this.t;};
+    this._mv=e=>{if(e.pointerType&&e.pointerType!=='mouse')return;const c=canvas.getBoundingClientRect(),k=TW/c.width,mx=(e.clientX-c.left)*k-GX;if(mx<0||mx>800)return;this.mouseX=mx;this.mouseT=this.t;};
     canvas.addEventListener('pointermove',this._mv);}
   cleanup(){canvas.removeEventListener('pointermove',this._mv);}
-  spawnBall(){this.stuck=true;this.balls=[{x:this.px,y:456,vx:0,vy:0,sp:245,trail:[]}];}
+  spawnBall(){this.stuck=true;this.balls=[{x:this.px,y:456,vx:0,vy:0,sp:215,trail:[]}];}
   get padW(){return this.wideT>0?this.pw*1.6:this.pw;}
   update(dt){
     const press=this.baseTick(dt);if(this.gate(dt,press))return;
@@ -4331,14 +4331,14 @@ class Breakout extends VBase{
       const sp=b.sp*(this.slowT>0?0.7:1);const n=Math.ceil(sp*dt/5);const d=dt/n;
       for(let i=0;i<n;i++){const L=Math.hypot(b.vx,b.vy)||1;b.x+=b.vx/L*sp*d;b.y+=b.vy/L*sp*d;
         if(b.x<28){b.x=28;b.vx=Math.abs(b.vx);}if(b.x>772){b.x=772;b.vx=-Math.abs(b.vx);}if(b.y<44){b.y=44;b.vy=Math.abs(b.vy);}
-        if(b.vy>0&&b.y>444&&b.y<462&&Math.abs(b.x-this.px)<this.padW/2+12){const off=clamp((b.x-this.px)/(this.padW/2),-1,1),a=off*0.95;b.vx=Math.sin(a)+clamp(this.vxp/2600,-0.2,0.2);b.vy=-Math.cos(a);b.y=444;Sfx.click();this.combo=0;}
+        if(b.vy>0&&b.y>440&&b.y<470&&Math.abs(b.x-this.px)<this.padW/2+20){const off=clamp((b.x-this.px)/(this.padW/2),-1,1),a=off*0.95;b.vx=Math.sin(a)+clamp(this.vxp/2600,-0.2,0.2);b.vy=-Math.cos(a);b.y=444;Sfx.click();this.combo=0;}
         for(const br of this.bricks){if(br.hp<=0)continue;if(b.x+7>br.x&&b.x-7<br.x+br.w&&b.y+7>br.y&&b.y-7<br.y+br.h){
-          const ox=Math.min(b.x+7-br.x,br.x+br.w-(b.x-7)),oy=Math.min(b.y+7-br.y,br.y+br.h-(b.y-7));if(ox<oy)b.vx=-b.vx;else b.vy=-b.vy;this.dmg(br);b.sp=Math.min(340,b.sp+1.2);break;}}}
+          const ox=Math.min(b.x+7-br.x,br.x+br.w-(b.x-7)),oy=Math.min(b.y+7-br.y,br.y+br.h-(b.y-7));if(ox<oy)b.vx=-b.vx;else b.vy=-b.vy;this.dmg(br);b.sp=Math.min(285,b.sp+0.8);break;}}}
       b.trail.push([b.x,b.y]);if(b.trail.length>8)b.trail.shift();}
     for(const b of this.balls){const L=Math.hypot(b.vx,b.vy)||1;if(Math.abs(b.vy)/L<0.38){b.vy=(b.vy<0?-1:1)*0.38*L;}}
     this.balls=this.balls.filter(b=>b.y<520||this.stuck);
     if(!this.balls.length&&!this.stuck){this.lives--;this.shake=0.3;Sfx.hurt();if(this.lives<=0){this.ok=0;this.phase='end';this.pt=0;Sfx.crash();}else this.spawnBall();}
-    for(const c of this.caps){c.y+=130*dt;if(c.y>444&&c.y<470&&Math.abs(c.x-this.px)<this.padW/2+14){c.dead=1;this.power(c.k);}if(c.y>520)c.dead=1;}
+    for(const c of this.caps){c.y+=130*dt;if(c.y>444&&c.y<470&&Math.abs(c.x-this.px)<this.padW/2+22){c.dead=1;this.power(c.k);}if(c.y>520)c.dead=1;}
     this.caps=this.caps.filter(c=>!c.dead);
     if(!this.bricks.some(b=>b.hp>0)){this.ok=1;this.phase='end';this.pt=0;Sfx.perk();}
     if((this.sayCd-=dt)<=0){this.sayCd=rnd(3.4,5);this.speakAt(()=>({x:400,y:58}));}
@@ -4346,7 +4346,7 @@ class Breakout extends VBase{
   }
   dmg(br){br.hp--;br.flash=0.12;this.hits++;if(br.hp>0){Sfx.clink();return;}
     this.kills++;this.combo=this.comboT>0?this.combo+1:1;this.comboT=1.4;this.score(25*this.combo,br.x+br.w/2,br.y);this.bang(br.x+br.w/2,br.y+br.h/2,10,[BRK_COL[br.r%7],'#fff']);Sfx.hit();Sfx.pop();
-    if(Math.random()<0.26)this.caps.push({x:br.x+br.w/2,y:br.y,k:pick(Math.random,['W','M','L','S','H'])});}
+    if(Math.random()<0.36)this.caps.push({x:br.x+br.w/2,y:br.y,k:pick(Math.random,['W','M','L','S','H'])});}
   power(k){Sfx.perk();const names={W:'WIDE PADDLE',M:'MULTI-BALL',L:'LASER',S:'SLOW BALL',H:'+1 LIFE'};this.pop.push({x:this.px,y:430,t:1.2,txt:names[k],c:'#00e5ff'});
     if(k==='W')this.wideT=14;else if(k==='L')this.laserT=12;else if(k==='S')this.slowT=10;else if(k==='H')this.lives=Math.min(5,this.lives+1);
     else if(k==='M'&&this.balls.length&&!this.stuck){const b=this.balls[0];for(const a of[-0.5,0.5])this.balls.push({x:b.x,y:b.y,vx:Math.sin(a)+b.vx*0.2,vy:-1,sp:b.sp,trail:[]});}}
