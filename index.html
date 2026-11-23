@@ -3005,7 +3005,7 @@ const Finish={
     if(e.type==='clone'||e.type==='boss'||!e.look)return false;
     const h=e.lastHit;if(!h||g.t-h.t>0.6)return false;if(h.kind==='car')return false;
     if(h.kind==='katana'&&Math.random()<0.85){const k=Math.random();if(k<0.55)this.behead(g,e,floor,h.dir);else this.slice(g,e,floor,h.dir,k<0.78?'legs':'half');return true;}
-    if(h.kind==='blast'){if(h.k>0.45&&Math.random()<0.8)this.gib(g,e,floor,h.dir);else g.corpses.push(new BurningCorpse(e,floor,1.5));return true;}
+    if(h.kind==='blast'){if(h.k>0.3&&Math.random()<0.88)this.gib(g,e,floor,h.dir);else this.fling(g,e,floor,h.dir,h.k);return true;}
     if(h.kind==='fire'){g.corpses.push(new BurningCorpse(e,floor,1));return true;}
     return false;
   },
@@ -3043,7 +3043,22 @@ const Finish={
       pieces.push(new Piece(S,bot,bx,by,{vx:dir*30,vy:0,vr:0,floor,cut:'top',topple:-dir,tAcc:6}));
     }
     const cyW=fy+cutY;
-    g.corpses.push(new Remains(pieces,{splat:{x:fx+dir*14,y:floor,r:22*sc},say:kind==='head'?null:pickLine(kind==='legs'?LINES_BEG_LEGS:LINES_BEG_HALF)}));
+    if(kind!=='head'){
+      const mk=(r,o,vx,vy,vr)=>new Piece(S,r,fx-S.ox+r.x+r.w/2,fy-S.oy+r.y+r.h/2,Object.assign({vx,vy,vr,floor,bleed:1.3},o));
+      const c1=S.oy-60*sc,hx=e.dir*2.5*sc,tl=S.ox-17*sc,tw=34*sc,np=[];
+      if(kind==='half'){
+        np.push(mk({x:S.ox+hx-17*sc,y:0,w:34*sc,h:c1},{stump:{x:-e.dir*0.5*sc,w:7*sc}},dir*rnd(120,220),-rnd(420,560),dir*rnd(8,13)));
+        np.push(mk({x:tl,y:c1,w:tw,h:cy-c1},{cut:'bottom'},dir*rnd(120,230),-rnd(140,240),dir*rnd(2.5,4.5)));
+        if(tl>5)np.push(mk({x:0,y:c1,w:tl,h:cy-c1},{},-rnd(90,210),-rnd(260,430),-rnd(5,10)));
+        if(W-tl-tw>5)np.push(mk({x:tl+tw,y:c1,w:W-tl-tw,h:cy-c1},{},rnd(90,210),-rnd(260,430),rnd(5,10)));
+      }else np.push(pieces[0]);
+      np.push(mk({x:0,y:cy,w:W/2,h:H-cy},{cut:'top',topple:-1,tAcc:rnd(3,6),bleed:1.6},-rnd(40,120),-rnd(60,140),0));
+      np.push(mk({x:W/2,y:cy,w:W/2,h:H-cy},{cut:'top',topple:1,tAcc:rnd(3,6),bleed:1.6},rnd(40,120),-rnd(60,140),0));
+      pieces.length=0;np.forEach(q=>pieces.push(q));
+      for(let i=0;i<36;i++)g.vfx.push(new Particle(fx+rnd(-8,8),cyW+rnd(-6,6),rnd(-280,280),-rnd(60,460),Math.random()<0.7?'#8a0016':'#d01a34',rnd(0.5,1.1),rnd(2,4),900));
+      for(let i=0;i<10;i++)g.vfx.push(new Particle(fx+rnd(-5,5),cyW,dir*rnd(120,420),-rnd(20,160),'#b0001e',rnd(0.25,0.45),rnd(3.5,5.5),400));
+    }
+    g.corpses.push(new Remains(pieces,{splat:{x:fx+dir*14,y:floor,r:36*sc},splatOnLand:true,life:4.6,say:kind==='head'?null:pickLine(kind==='legs'?LINES_BEG_LEGS:LINES_BEG_HALF)}));
     for(let i=0;i<16;i++)g.vfx.push(new Particle(fx+rnd(-6,6),cyW,dir*rnd(40,260),rnd(-260,40),Math.random()<0.65?'#b0001e':'#ff3355',rnd(0.4,0.8),rnd(2,3.4),900));
     g.vfx.push(new Slash(fx,cyW,dir,'#ffffff'));g.lights.add(fx,cyW,120,'#00f3ff',0.3,1);
     g.popup(fx,fy-S.oy-6,kind==='head'?'HEADS UP!':kind==='legs'?'LEGLESS!':'SLICED!','#00f3ff');
@@ -3054,10 +3069,12 @@ const Finish={
   gib(g,e,floor,dir){
     const sc=e.sc,P={t:e.t||0,hasDrink:false,flinch:1,talk:1,char:Math.max(0.45,e.char||0)};
     const S=snapDude(e.look,P,e.dir,sc),fx=e.x+e.w/2,fy=e.y+e.h,W=S.c.width/FIN_K,H=S.c.height/FIN_K;
-    const cut1=S.oy-60*sc,cut2=S.oy-31*sc,hxW=e.dir*2.5*sc;
+    const cut1=S.oy-60*sc,cut2=S.oy-31*sc,hxW=e.dir*2.5*sc,gtl=S.ox-17*sc,gtw=34*sc;
     const parts=[
       [{x:S.ox+hxW-17*sc,y:0,w:34*sc,h:cut1},{stump:{x:-e.dir*0.5*sc,w:7*sc}}],
-      [{x:0,y:cut1,w:W,h:cut2-cut1},{cut:'bottom'}],
+      [{x:gtl,y:cut1,w:gtw,h:cut2-cut1},{cut:'bottom'}],
+      [{x:0,y:cut1,w:Math.max(6,gtl),h:cut2-cut1},{}],
+      [{x:gtl+gtw,y:cut1,w:Math.max(6,W-gtl-gtw),h:cut2-cut1},{}],
       [{x:0,y:cut2,w:W/2,h:H-cut2},{cut:'top'}],
       [{x:W/2,y:cut2,w:W/2,h:H-cut2},{cut:'top'}],
     ];
@@ -3066,6 +3083,15 @@ const Finish={
     g.corpses.push(new Remains(pieces,{life:4.6,splat:{x:fx,y:floor,r:26*sc}}));
     for(let i=0;i<20;i++)g.vfx.push(new Particle(fx+rnd(-8,8),fy-40*sc,rnd(-300,300),rnd(-460,-80),Math.random()<0.6?'#8a0016':'#2a1a14',rnd(0.5,1),rnd(2,3.6),900));
     g.popup(fx,fy-90*sc,pick(Math.random,['BLOWN AWAY!','KA-BOOM!','BUDGET BLOWN!','ACCOUNT WIPED!']),'#ffaa30');
+  },
+  // a whole body hurled by the blast: tumbles through the air, bounces, bleeds and smoulders
+  fling(g,e,floor,dir,k){
+    const sc=e.sc,P={t:e.t||0,hasDrink:false,flinch:1,talk:1,char:Math.max(0.3,e.char||0)};
+    const S=snapDude(e.look,P,e.dir,sc),fx=e.x+e.w/2,fy=e.y+e.h,W=S.c.width/FIN_K,H=S.c.height/FIN_K;
+    const pc=new Piece(S,{x:0,y:0,w:W,h:H},fx-S.ox+W/2,fy-S.oy+H/2,{vx:dir*rnd(380,640),vy:-rnd(600,860),vr:dir*rnd(9,16),floor,burn:rnd(1.2,2.4),bleed:0.9});
+    g.corpses.push(new Remains([pc],{life:4.2,splat:{x:fx+dir*140,y:floor,r:26*sc},splatOnLand:true}));
+    for(let i=0;i<18;i++)g.vfx.push(new Particle(fx+rnd(-8,8),fy-30*sc,dir*rnd(40,260)+rnd(-100,100),-rnd(100,420),Math.random()<0.6?'#8a0016':'#2a1a14',rnd(0.5,1),rnd(2,3.4),900));
+    g.popup(fx,fy-90*sc,pick(Math.random,['AIRBORNE!','LAUNCHED!','FLYING SEMINAR!','TAKING OFF!','BLOWN OUT OF THE FUNNEL!']),'#ffaa30');
   },
   lego(g,e,floor,dir){
     const sc=e.sc,S=snapDude(e.look,this.pose(e),e.dir,sc),fx=e.x+e.w/2,fy=e.y+e.h;
@@ -3267,11 +3293,11 @@ const Arms={
     g.lights.add(x,y,R*3.2,'#ffa040',0.45,1);g.flash=Math.max(g.flash||0,0.12);
     for(let i=0;i<16;i++)g.vfx.push(new Particle(x,y,rnd(-420,420),rnd(-520,-80),Math.random()<0.5?'#ffcc66':'#5a4a40',rnd(0.5,1),rnd(1.5,3.2),900));
     for(const e of g.targets()){
-      const ex=e.x+e.w/2,ey=e.y+e.h/2,d=Math.hypot(ex-x,ey-y);if(d>R+e.w/2)continue;
+      const ex=e.x+e.w/2,ey=e.y+e.h/2,d=Math.hypot(ex-x,ey-y);if(d>R*1.3+e.w/2)continue;
       const k=1-Math.min(1,d/(R+e.w/2)),dir=ex<x?-1:1;
       if(e===g.boss){e.damage(Math.round(18+28*k),g);continue;}
       e.lastHit={kind:'blast',t:g.t,dir,k};e.hp-=Math.round(14+34*k);if(Math.random()<0.3)this.ignite(g,e,1.2+k);
-      if(e.hp>0){e.st='thrown';e.stT=0;e.vx=dir*(220+260*k);e.vy=-(320+300*k);e.onGround=false;e.rot=0;e.spin=dir*9;e.kb=0;e.hitSet=new Set();}
+      if(e.hp>0){e.st='thrown';e.stT=0;e.vx=dir*(330+430*k);e.vy=-(470+400*k);e.onGround=false;e.rot=0;e.spin=dir*(12+4*k);e.kb=0;e.hitSet=new Set();}
       else{e.vx=dir*300;e.vy=-400;}
     }
     // fire left burning on the floor below the blast + soot marks
